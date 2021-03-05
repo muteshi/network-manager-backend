@@ -89,6 +89,11 @@ router.patch("/users/edit-account", auth, async (req, res) => {
 router.delete("/users/delete-account", auth, async (req, res) => {
   try {
     const user = req.user;
+    if (user.role === "superuser") {
+      return res
+        .status(401)
+        .send({ error: "You cannot delete a super user account" });
+    }
     await user.remove();
     res.send(user);
   } catch (error) {
