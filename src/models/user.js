@@ -56,6 +56,12 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.virtual("sites", {
+  ref: "Site",
+  localField: "_id",
+  foreignField: "owner",
+});
+
 userSchema.methods.generateUserAuthToken = async function () {
   const user = this;
   const token = jwt.sign(

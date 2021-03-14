@@ -23,8 +23,10 @@
   "homepage": "https://github.com/muteshi/network-manager-app-backend#readme",
   "dependencies": {
     "@sendgrid/mail": "^7.4.2",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
+    "is-cidr": "^4.0.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.18",
     "validator": "^13.5.2"
