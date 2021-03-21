@@ -21,7 +21,6 @@ const siteSchema = new mongoose.Schema(
       index: { unique: true, dropDups: true },
       trim: true,
       validate(value) {
-        // console.log(!(isCidr.v4(value) || isCidr.v6(value)));
         if (!(isCidr.v4(value) || isCidr.v6(value))) {
           throw new Error("Invalid IP address");
         }
@@ -50,6 +49,14 @@ siteSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// Remove router password from response
+siteSchema.methods.toJSON = function () {
+  const site = this;
+  const siteData = site.toObject();
+  delete siteData.password;
+  return siteData;
+};
 
 // siteSchema.statics.loginIntoRouter = async (url, username, password) => {
 //   try {

@@ -16,12 +16,16 @@ router.post("/sites", auth, async (req, res) => {
 
 // Get all sites
 router.get("/sites", auth, async (req, res) => {
+  if (!req.user.active) return res.status(401).send();
   const sort = {};
 
   if (req.query.sortBy) {
     const parts = req.query.sortBy.split(":");
     sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
   }
+
+  //for getting all sites
+  const sites = await Site.find({});
 
   // get sites from a specific user
   try {
@@ -36,7 +40,9 @@ router.get("/sites", auth, async (req, res) => {
       })
       .execPopulate();
 
-    res.send(req.user.sites);
+    const data = req.user.role === "superuser" ? sites : req.user.sites;
+
+    res.send(data);
   } catch (error) {
     res.status(500).send(error);
   }
@@ -44,6 +50,7 @@ router.get("/sites", auth, async (req, res) => {
 
 // Fetch single site information
 router.get("/sites/:id", auth, async (req, res) => {
+  if (!req.user.active) return res.status(401).send();
   const siteId = req.params.id;
 
   try {
@@ -60,18 +67,22 @@ router.get("/sites/:id", auth, async (req, res) => {
 
 // Update a site information
 router.patch("/sites/edit/:id", auth, async (req, res) => {
+  if (!req.user.active) return res.status(401).send();
   const updates = Object.keys(req.body);
-  console.log(updates);
 
   try {
     const site = await Site.findOne({
       _id: req.params.id,
-      owner: req.user._id,
     });
 
-    if (!site) {
-      return res.status(404).send();
-    }
+    if (
+      !(
+        req.user.role === "superuser" ||
+        site.owner.toString() === req.user._id.toString()
+      )
+    )
+      return res.status(401).send();
+
     updates.forEach((update) => (site[update] = req.body[update]));
     await site.save();
 
@@ -83,10 +94,13 @@ router.patch("/sites/edit/:id", auth, async (req, res) => {
 
 // Delete a site
 router.delete("/sites/delete/:id", auth, async (req, res) => {
+  if (req.user.role !== "superuser")
+    return res
+      .status(401)
+      .send({ error: "Unauthorized to perform this action" });
   try {
     const site = await Site.findOneAndDelete({
       _id: req.params.id,
-      owner: req.user._id,
     });
     if (!site) {
       return res.status(404).send();
